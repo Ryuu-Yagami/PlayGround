@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Mosswood Quest</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071811;font-family:Trebuchet MS,system-ui,sans-serif;color:#fff}
+#game{position:relative;width:100vw;height:100vh}.stage{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.hud{position:absolute;z-index:5;left:18px;top:14px;display:flex;gap:14px;align-items:center;text-shadow:2px 2px #18351f}
+.leaves{display:flex;gap:4px}.leaf{width:24px;height:32px;border-radius:95% 15% 95% 15%;background:linear-gradient(135deg,#a9f071,#43a95d);border:2px solid #d9ffc1;transform:rotate(-12deg);box-shadow:0 0 10px #77dd72}.leaf.empty{filter:grayscale(1);opacity:.25}.coinhud{font-weight:900;font-size:22px}.coinhud:before{content:"";display:inline-block;width:20px;height:26px;margin-right:7px;border-radius:50%;background:#ffc928;border:3px solid #fff184;vertical-align:-6px}
+.bossHud{position:absolute;z-index:5;top:18px;left:50%;transform:translateX(-50%);width:min(430px,45vw);text-align:center;display:none}.bossName{font-size:12px;letter-spacing:4px;text-transform:uppercase}.bossTrack{height:12px;border:3px solid #e7d7ae;background:#251831;border-radius:8px;overflow:hidden}.bossFill{height:100%;width:100%;background:linear-gradient(90deg,#b35bd1,#ef85c1)}
+.controls{position:absolute;z-index:10;inset:auto 0 18px;display:flex;justify-content:space-between;padding:0 18px;pointer-events:none}.move{display:flex;gap:10px}.action{display:flex;align-items:flex-end;gap:12px}.btn{pointer-events:auto;touch-action:none;user-select:none;width:72px;height:72px;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:rgba(10,38,28,.62);box-shadow:inset 0 0 20px rgba(180,255,192,.12);display:grid;place-items:center;font-size:28px;font-weight:900;color:white;text-shadow:2px 2px #18351f}.btn.jump{width:82px;height:82px;background:rgba(45,95,54,.68)}.btn.attack{width:68px;height:68px;font-size:15px}.btn.pressed{transform:scale(.92);background:rgba(116,180,95,.8)}
+#banner{position:absolute;z-index:20;left:50%;top:43%;transform:translate(-50%,-50%);text-align:center;text-shadow:3px 3px #102819;pointer-events:none;opacity:0;transition:.25s}.bannerShow{opacity:1!important}.title{font-size:clamp(32px,6vw,72px);font-weight:900;letter-spacing:3px}.sub{font-size:16px;margin-top:8px;color:#d8f8c4}
+#shop{position:absolute;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,90vw);background:#173729;border:4px solid #86b66d;border-radius:14px;padding:18px;box-shadow:0 15px 50px #06140d;display:none}.shopHead{display:flex;justify-content:space-between;align-items:center}.shopHead h2{margin:0}.upgrade{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;background:#0d2a20;border:1px solid #55864e;border-radius:8px;padding:10px;margin-top:9px}.upgrade button{border:2px solid #d8c678;border-radius:7px;background:#667d31;color:#fff;font-weight:900;padding:9px 12px}.upgrade button:disabled{opacity:.4}.upgradeName{font-weight:900}.upgradeDesc{font-size:12px;color:#b9d7ac}.shopFoot{margin-top:12px;text-align:center}.shopFoot button{padding:10px 18px;border-radius:8px;border:2px solid #fff;background:#86b66d;color:#173729;font-weight:900}
+.toast{position:absolute;z-index:15;left:50%;top:90px;transform:translateX(-50%);font-weight:900;text-shadow:2px 2px #152519;opacity:0;transition:.18s}.toast.show{opacity:1}
+@media(pointer:fine){.controls{opacity:.72;bottom:10px}.btn{width:58px;height:58px}.btn.jump{width:64px;height:64px}}
+</style>
+</head>
+<body><div id="game">
+<canvas id="c" class="stage"></canvas>
+<div class="hud"><div id="leaves" class="leaves"></div><div id="coins" class="coinhud">0</div></div>
+<div id="bossHud" class="bossHud"><div class="bossName">The Briar Widow</div><div class="bossTrack"><div id="bossFill" class="bossFill"></div></div></div>
+<div id="banner"><div class="title">MOSSWOOD</div><div class="sub">A forest quest</div></div><div id="toast" class="toast"></div>
+<div id="shop"><div class="shopHead"><h2>Fern & Acorn</h2><div id="shopCoins">0 ◉</div></div>
+<div class="upgrade"><div><div class="upgradeName">Sylph Step</div><div class="upgradeDesc">Unlock double jump</div></div><button data-upgrade="double">30</button></div>
+<div class="upgrade"><div><div class="upgradeName">Thornblade</div><div class="upgradeDesc">Increase attack damage</div></div><button data-upgrade="damage">24</button></div>
+<div class="upgrade"><div><div class="upgradeName">Ancient Bark</div><div class="upgradeDesc">Expand maximum health</div></div><button data-upgrade="health">20</button></div>
+<div class="shopFoot"><button id="continue">Continue</button></div></div>
+<div class="controls"><div class="move"><div id="left" class="btn">◀</div><div id="right" class="btn">▶</div></div><div class="action"><div id="attack" class="btn attack">ATTACK</div><div id="jump" class="btn jump">▲</div></div></div>
+</div>
+<script src="game.js"></script>
+</body></html>
