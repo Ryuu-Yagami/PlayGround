@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#10251f" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2310251f'/%3E%3Ctext x='50' y='77' text-anchor='middle' font-size='82' fill='%23c5e488'%3E%E2%9C%B3%3C/text%3E%3C/svg%3E" />
+  <title>Mosslight — A Forest Adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700;9..144,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Mosslight home"><span class="brand-mark">✳</span><span>MOSSLIGHT</span></a>
+      <div class="top-note"><span class="live-dot"></span> FOREST FIELD GUIDE <span class="separator">/</span> VOL. 01</div>
+      <button class="sound-toggle" id="soundToggle" aria-label="Toggle sound"><span class="sound-icon">♪</span><span>Sound on</span></button>
+    </header>
+
+    <section class="game-frame" aria-label="Mosslight platform game">
+      <canvas id="game" width="960" height="540" aria-label="Mosslight forest platformer"></canvas>
+      <div class="hud" id="hud" hidden>
+        <div class="hud-left">
+          <div class="health-card"><div class="hud-label">VITALITY</div><div class="leaves" id="leaves"></div></div>
+          <div class="coin-card"><span class="coin-glyph">✦</span><span id="coinCount">00</span><span class="coin-label">SEEDS</span></div>
+        </div>
+        <div class="stage-card"><span class="stage-kicker">WOODLANDS · <b id="stageNumber">01</b></span><span class="stage-name" id="stageName">Fernfall Trail</span></div>
+        <button class="pause-button" id="pauseButton" aria-label="Pause game">Ⅱ</button>
+      </div>
+      <div class="boss-hud" id="bossHud" hidden><div class="boss-heading"><span>ANCIENT GUARDIAN</span><span id="bossState">LISTENING…</span></div><div class="boss-track"><div id="bossHealth"></div></div></div>
+      <div class="toast" id="toast" aria-live="polite"></div>
+      <div class="touch-controls" id="touchControls" hidden>
+        <div class="touch-move"><button data-control="left" aria-label="Move left">‹</button><button data-control="right" aria-label="Move right">›</button></div>
+        <div class="touch-actions"><button class="touch-attack" data-control="attack" aria-label="Attack">✧</button><button class="touch-jump" data-control="jump" aria-label="Jump">↑</button></div>
+      </div>
+      <div class="screen" id="screen">
+        <div class="screen-card title-card" id="titleCard">
+          <div class="eyebrow"><span class="tiny-star">✦</span> AN EXPLORER'S TALE</div>
+          <h1>Moss<span>light</span></h1>
+          <p class="subtitle">A little light goes a long way.</p>
+          <p class="intro">Run, leap and lend a hand to the old forest.<br>Some things in the dark just need a little sparkle.</p>
+          <button class="primary-button" id="startButton">ENTER THE WOOD <span>↗</span></button>
+          <div class="control-hint"><span>← →</span> MOVE <i>·</i> <span>SPACE</span> JUMP <i>·</i> <span>X</span> SPARK</div>
+          <div class="controller-hint">Controller ready <span>•</span> Touch controls on mobile</div>
+        </div>
+        <div class="screen-card shop-card" id="shopCard" hidden>
+          <div class="eyebrow"><span class="tiny-star">✦</span> THE HOLLOW MARKET</div>
+          <h2>Trade for a little magic.</h2>
+          <p class="shop-balance">Your seed pouch <b>✦ <span id="shopCoins">0</span></b></p>
+          <div class="upgrade-list">
+            <button class="upgrade" data-upgrade="double"><span class="upgrade-icon">↟</span><span><b>Second wind</b><small>Unlock a double jump</small></span><strong>12 ✦</strong></button>
+            <button class="upgrade" data-upgrade="damage"><span class="upgrade-icon">✧</span><span><b>Bright spark</b><small>Deal more damage</small></span><strong>15 ✦</strong></button>
+            <button class="upgrade" data-upgrade="health"><span class="upgrade-icon">❧</span><span><b>Heartwood</b><small>Grow one extra leaf</small></span><strong>20 ✦</strong></button>
+          </div>
+          <button class="primary-button" id="continueButton">FOLLOW THE TRAIL <span>↗</span></button>
+          <div class="controller-hint">Press Enter to continue <span>•</span> Tap upgrades to trade</div>
+        </div>
+        <div class="screen-card end-card" id="endCard" hidden>
+          <div class="eyebrow"><span class="tiny-star">✦</span> THE WOOD REMEMBERS</div>
+          <h2>A brighter forest.</h2>
+          <p class="intro">The old roots are safe, and the little lights<br>have found their way home.</p>
+          <div class="end-stats" id="endStats"></div>
+          <button class="primary-button" id="againButton">WANDER AGAIN <span>↗</span></button>
+        </div>
+        <div class="screen-card pause-card" id="pauseCard" hidden>
+          <div class="eyebrow">A MOMENT TO BREATHE</div><h2>Paused</h2>
+          <p class="intro">The forest can wait.</p>
+          <button class="primary-button" id="resumeButton">BACK TO THE TRAIL <span>↗</span></button>
+        </div>
+      </div>
+    </section>
+    <footer class="footer"><span>✦ &nbsp; TAKE YOUR TIME. THE WOOD IS WIDE.</span><span>MOVE <b>← →</b> &nbsp; JUMP <b>SPACE / A</b> &nbsp; SPARK <b>X / X</b></span></footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
