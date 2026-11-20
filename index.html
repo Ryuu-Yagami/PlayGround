@@ -31,9 +31,10 @@
       </div>
       <div class="boss-hud" id="bossHud" hidden><div class="boss-heading"><span>ANCIENT GUARDIAN</span><span id="bossState">LISTENING…</span></div><div class="boss-track"><div id="bossHealth"></div></div></div>
       <div class="toast" id="toast" aria-live="polite"></div>
+      <div class="interaction-prompt" id="interactionPrompt" hidden><span>E</span><b>Talk</b></div>
       <div class="touch-controls" id="touchControls" hidden>
         <div class="touch-move"><button data-control="left" aria-label="Move left">‹</button><button data-control="right" aria-label="Move right">›</button></div>
-        <div class="touch-actions"><button class="touch-attack" data-control="attack" aria-label="Attack">✧</button><button class="touch-jump" data-control="jump" aria-label="Jump">↑</button></div>
+        <div class="touch-actions"><button class="touch-interact" data-control="interact" aria-label="Interact with nearby NPC">●</button><button class="touch-attack" data-control="attack" aria-label="Attack">✧</button><button class="touch-jump" data-control="jump" aria-label="Jump">↑</button></div>
       </div>
       <div class="screen" id="screen">
         <div class="screen-card title-card" id="titleCard">
@@ -42,7 +43,7 @@
           <p class="subtitle">A little light goes a long way.</p>
           <p class="intro">Run, leap and lend a hand to the old forest.<br>Some things in the dark just need a little sparkle.</p>
           <button class="primary-button" id="startButton">ENTER THE WOOD <span>↗</span></button>
-          <div class="control-hint"><span>← →</span> MOVE <i>·</i> <span>SPACE</span> JUMP <i>·</i> <span>X</span> SPARK</div>
+          <div class="control-hint"><span>← →</span> MOVE <i>·</i> <span>SPACE</span> JUMP <i>·</i> <span>X</span> SPARK <i>·</i> <span>E</span> TALK</div>
           <div class="controller-hint">Controller ready <span>•</span> Touch controls on mobile</div>
         </div>
         <div class="screen-card shop-card" id="shopCard" hidden>
@@ -71,7 +72,7 @@
         </div>
       </div>
     </section>
-    <footer class="footer"><span>✦ &nbsp; TAKE YOUR TIME. THE WOOD IS WIDE.</span><span>MOVE <b>← →</b> &nbsp; JUMP <b>SPACE / A</b> &nbsp; SPARK <b>X / X</b></span></footer>
+    <footer class="footer"><span>✦ &nbsp; TAKE YOUR TIME. THE WOOD IS WIDE.</span><span>MOVE <b>← →</b> &nbsp; JUMP <b>SPACE / A</b> &nbsp; SPARK <b>X / X</b> &nbsp; TALK <b>E / Y</b></span></footer>
   </main>
   <script src="game.js"></script>
 </body>
