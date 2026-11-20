@@ -17,12 +17,13 @@
   const stageNames = ['Fernfall Trail', 'The Gloaming Wilds', 'Emberfen Hollow', 'The Elderwood Crown'];
   const bossNames = ['Thess, the Silk Keeper', 'Antler of the Dusk', 'Moth Queen Vela', 'The Elder Sentinel'];
   const keys = new Set();
-  const touch = { left:false, right:false, jump:false, attack:false };
+  const touch = { left:false, right:false, jump:false, attack:false, interact:false };
   let gameMode = 'title', lastTime = 0, cameraX = 0, elapsed = 0;
   let player, platforms, enemies, coins, particles, bolts, webs, boss, npcs, worldWidth;
   let stage = 0, checkpointX = 80, totalSeeds = 0, audioOn = true, audioCtx;
   let musicTimer = 0, musicStep = 0, musicGain = null;
   let toastTimer = 0, screenShake = 0, bossDefeated = false, deaths = 0;
+  let coyoteTime = 0, jumpBuffer = 0, nearestNpc = null, dialogueIndex = 0;
   const upgrades = { double:false, damage:1, health:5 };
 
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -76,6 +77,7 @@
     gameMode=which;
     hud.hidden=which==='title'||which==='end';
     touchControls.hidden=which!=='playing'||!isTouchDevice();
+    if(which!=='playing')document.querySelector('#interactionPrompt').hidden=true;
     if(which!=='playing') bossHud.hidden=true;
     if(which==='playing'&&audioOn){
       if(audioCtx?.state==='suspended')audioCtx.resume().catch(()=>{});
@@ -92,6 +94,7 @@
   }
   function setupStage(index, preservePlayer=false) {
     stage=index; worldWidth=3600;
+    nearestNpc=null;coyoteTime=0;jumpBuffer=0;jumpWasDown=false;attackWasDown=false;interactWasDown=false;
     platforms=[
       {x:270,y:390,w:120,h:18},{x:520,y:340,w:124,h:18},{x:770,y:390,w:155,h:18},
       {x:1050,y:350,w:135,h:18},{x:1320,y:395,w:160,h:18},{x:1580,y:340,w:150,h:18},
@@ -141,13 +144,24 @@
     let right=keys.has('ArrowRight')||keys.has('KeyD')||touch.right;
     let jump=keys.has('Space')||keys.has('ArrowUp')||keys.has('KeyW')||keys.has('KeyZ')||touch.jump;
     let attack=keys.has('KeyX')||keys.has('KeyJ')||keys.has('KeyK')||touch.attack;
+    let interact=keys.has('KeyE')||touch.interact;
     const pads=navigator.getGamepads?.()||[];const pad=Array.from(pads).find(Boolean);
-    if(pad){left||=pad.axes[0]<-.28||pad.buttons[14]?.pressed;right||=pad.axes[0]>.28||pad.buttons[15]?.pressed;jump||=!!pad.buttons[0]?.pressed||!!pad.buttons[12]?.pressed;attack||=!!pad.buttons[2]?.pressed||!!pad.buttons[5]?.pressed;}
-    return {left,right,jump,attack};
+    if(pad){const axis=pad.axes[0]||0,leftTrigger=pad.buttons[6]?.value||0,rightTrigger=pad.buttons[7]?.value||0;left||=axis<-.28||pad.buttons[14]?.pressed||leftTrigger>.65;right||=axis>.28||pad.buttons[15]?.pressed||rightTrigger>.65;jump||=!!pad.buttons[0]?.pressed||!!pad.buttons[12]?.pressed;attack||=!!pad.buttons[2]?.pressed||!!pad.buttons[5]?.pressed;interact||=!!pad.buttons[3]?.pressed||!!pad.buttons[1]?.pressed;}
+    return {left,right,jump,attack,interact};
   }
-  let jumpWasDown=false,attackWasDown=false;
+  let jumpWasDown=false,attackWasDown=false,interactWasDown=false;
   function doJump() {
-    if(player.onGround||upgrades.double&&player.jumps<2){player.vy=player.jumps? -565:-610;player.onGround=false;player.jumps++;sound(player.jumps>1?460:560,.11,'triangle');burst(player.x+player.w/2,player.y+player.h,'#d7e8a5',7);}
+    if(player.onGround||coyoteTime>0||upgrades.double&&player.jumps<2){player.vy=player.jumps? -565:-610;player.onGround=false;player.jumps++;sound(player.jumps>1?460:560,.11,'triangle');burst(player.x+player.w/2,player.y+player.h,'#d7e8a5',7);}
+  }
+  function interactWithNpc() {
+    if(!nearestNpc)return;
+    const lines={
+      mothkeeper:['“The moths remember every path you protect.”','“A small spark can outshine a very old shadow.”'],
+      merchant:['“Seeds buy wishes, but courage makes them grow.”','“My best wares are hidden in the hollow market.”'],
+      warden:['“The trail is kinder to those who watch where they leap.”','“The guardians test every brave little heart.”']
+    }[nearestNpc.type];
+    showToast(lines[dialogueIndex%lines.length]);dialogueIndex++;
+    sound(510,.12,'sine',.024);burst(nearestNpc.x+12,nearestNpc.y+8,'#dbe99e',7);
   }
   function attack() {
     if(player.attackCd>0)return;
@@ -180,9 +194,14 @@
     if(gameMode!=='playing')return;
     updateMusic(dt);
     const input=inputState();
-    if(input.jump&&!jumpWasDown)doJump();
+    if(input.jump&&!jumpWasDown)jumpBuffer=.12;
+    else jumpBuffer=Math.max(0,jumpBuffer-dt);
+    if(player.onGround)coyoteTime=.1;
+    else coyoteTime=Math.max(0,coyoteTime-dt);
+    if(jumpBuffer>0&&(coyoteTime>0||player.onGround||upgrades.double&&player.jumps<2)){doJump();jumpBuffer=0;coyoteTime=0;}
     if(input.attack&&!attackWasDown)attack();
-    jumpWasDown=input.jump;attackWasDown=input.attack;
+    if(input.interact&&!interactWasDown)interactWithNpc();
+    jumpWasDown=input.jump;attackWasDown=input.attack;interactWasDown=input.interact;
     const speed=245, accel=1900;
     if(input.left){player.vx=Math.max(player.vx-accel*dt,-speed);player.face=-1;}
     else if(input.right){player.vx=Math.min(player.vx+accel*dt,speed);player.face=1;}
@@ -195,6 +214,17 @@
     for(const p of platforms){
       if(player.x+player.w>p.x&&player.x<p.x+p.w&&oldY+player.h<=p.y+4&&player.y+player.h>=p.y&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.onGround=true;player.jumps=0;}
     }
+    nearestNpc=null;
+    let nearestDistance=72;
+    for(const npc of npcs||[]) {
+      const npcCenter=npc.x+12;
+      const playerCenter=player.x+player.w/2;
+      const distance=Math.abs(playerCenter-npcCenter);
+      if(distance<nearestDistance&&Math.abs(player.y-npc.y)<55){nearestNpc=npc;nearestDistance=distance;}
+    }
+    const interactionPrompt=document.querySelector('#interactionPrompt');
+    if(nearestNpc){interactionPrompt.hidden=false;interactionPrompt.querySelector('b').textContent='Talk';}
+    else interactionPrompt.hidden=true;
     player.anim+=dt*Math.abs(player.vx)*.045;player.invuln=Math.max(0,player.invuln-dt);player.attackCd=Math.max(0,player.attackCd-dt);player.flash=Math.max(0,player.flash-dt);
     if(player.y>H+250){damagePlayer();player.y=FLOOR-player.h;}
     if(player.x>checkpointX+620){checkpointX=Math.floor(player.x/600)*600;showToast('TRAIL MARKER FOUND');}
