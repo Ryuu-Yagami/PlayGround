@@ -116,7 +116,7 @@
       {w:126,h:118,hp:14,maxHp:14,y:FLOOR-144,type:'moth'},
       {w:150,h:138,hp:18,maxHp:18,y:FLOOR-164,type:'sentinel'}
     ][index];
-    boss={x:worldWidth-370,y:bossData.y,...bossData,timer:1.6,state:'idle',attackTimer:2,flash:0};
+    boss={x:worldWidth-370,y:bossData.y,baseY:bossData.y,...bossData,timer:1.6,state:'idle',attackTimer:2,flash:0,anim:0,vx:0};
     npcs=[{x:145,y:FLOOR-44,type:'mothkeeper',bob:0},{x:1050,y:FLOOR-44,type:'merchant',bob:0},{x:2320,y:FLOOR-44,type:'warden',bob:0}];
     bossDefeated=false;checkpointX=80;cameraX=0;
     if(!preservePlayer||!player) player=makePlayer(80);
@@ -255,7 +255,29 @@
   }
   function updateBoss(dt) {
     if(bossDefeated)return;
-    boss.timer-=dt;boss.attackTimer-=dt;boss.flash=Math.max(0,boss.flash-dt);
+    boss.timer-=dt;boss.attackTimer-=dt;boss.flash=Math.max(0,boss.flash-dt);boss.anim=(boss.anim||0)+dt;
+
+    // Each guardian patrols the arena instead of remaining frozen behind attacks.
+    // Keep the movement bounded so bosses stay readable and never leave the stage.
+    const arenaLeft=worldWidth-620, arenaRight=worldWidth-200;
+    boss.vx=boss.vx||0;
+    if(boss.type==='spider'){
+      boss.vx+=((boss.x+(boss.w/2)<(arenaLeft+arenaRight)/2?-1:1)*-10)*dt;
+      boss.vx=clamp(boss.vx,-55,55);
+      boss.x=clamp(boss.x+Math.sin(boss.anim*1.25)*17*dt,arenaLeft,arenaRight);
+      boss.y=boss.baseY+(boss.baseY?0:0)+Math.sin(boss.anim*2.2)*5;
+    }else if(boss.type==='stag'){
+      const dir=Math.sin(boss.anim*.62)>=0?1:-1;
+      boss.vx=dir*(75+stage*5);
+      boss.x=clamp(boss.x+boss.vx*dt,arenaLeft,arenaRight);
+      boss.y=boss.baseY+Math.abs(Math.sin(boss.anim*1.7))*-5;
+    }else if(boss.type==='moth'){
+      boss.x=clamp(boss.x+Math.sin(boss.anim*.75)*44*dt,arenaLeft,arenaRight);
+      boss.y=boss.baseY+Math.sin(boss.anim*1.8)*18;
+    }else{
+      boss.x=clamp(boss.x+Math.sin(boss.anim*.48)*24*dt,arenaLeft,arenaRight);
+      boss.y=boss.baseY+Math.sin(boss.anim*1.1)*3;
+    }
     if(boss.timer<=0){
       if(boss.state==='idle'){boss.state='open';boss.timer=boss.type==='sentinel'?1.8:1.45;document.querySelector('#bossState').textContent='WEAK SPOT EXPOSED';sound(520,.18,'sine',.025);}
       else {boss.state='idle';boss.timer=boss.type==='moth'?2.2:3.0;document.querySelector('#bossState').textContent='LISTENING…';}
@@ -319,15 +341,32 @@
     if(player.invuln>0&&Math.floor(elapsed*17)%2===0)return;
     const x=player.x-cameraX,y=player.y;const run=Math.sin(player.anim)*3, jumping=!player.onGround;
     ctx.save();ctx.translate(x+player.w/2,y);ctx.scale(player.face,1);
-    ctx.fillStyle='#162b21';ctx.globalAlpha=.3;ctx.beginPath();ctx.ellipse(0,48,20,5,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-    ctx.strokeStyle='#473c2e';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-6,39);ctx.lineTo(-8+run,47);ctx.moveTo(6,39);ctx.lineTo(8-run,47);ctx.stroke();
-    ctx.fillStyle=player.flash?'#fff1c1':'#719353';ctx.beginPath();ctx.moveTo(-15,17);ctx.quadraticCurveTo(-17,29,-12,40);ctx.quadraticCurveTo(1,48,15,39);ctx.lineTo(12,17);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='#c4d69a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-2,21);ctx.quadraticCurveTo(5,28,-1,38);ctx.stroke();
-    ctx.fillStyle='#d5bd85';ctx.beginPath();ctx.ellipse(0,12,12,13,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#293a2b';ctx.beginPath();ctx.ellipse(4,14,1.5,2.4,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#9fc16c';ctx.beginPath();ctx.moveTo(-12,7);ctx.quadraticCurveTo(-2,-11,10,3);ctx.quadraticCurveTo(14,8,11,10);ctx.quadraticCurveTo(2,5,-12,7);ctx.fill();
-    ctx.fillStyle='#dbe69e';ctx.beginPath();ctx.ellipse(-1,-1,4,2,.5,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#bcd58a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(10,22);ctx.lineTo(18+jumping*4,18);ctx.stroke();
+
+    // Mossling design inspired by the reference: tiny green wanderer, leaflike
+    // hood/ears, warm face, dark dot eyes, and a bright carried spark.
+    ctx.fillStyle='#10241d';ctx.globalAlpha=.28;ctx.beginPath();ctx.ellipse(0,48,21,5,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+
+    // Feet and slim legs
+    ctx.strokeStyle='#4a4a32';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();
+    ctx.moveTo(-7,37);ctx.lineTo(-8+run,46);ctx.moveTo(7,37);ctx.lineTo(8-run,46);ctx.stroke();
+
+    // Leaf-green tunic / cape
+    ctx.fillStyle=player.flash?'#fff4bd':'#668a4e';ctx.beginPath();ctx.moveTo(-14,17);ctx.quadraticCurveTo(-18,29,-12,41);ctx.quadraticCurveTo(0,48,13,39);ctx.lineTo(12,17);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#9caf69';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-5,21);ctx.quadraticCurveTo(2,29,-3,39);ctx.moveTo(5,22);ctx.quadraticCurveTo(8,29,5,38);ctx.stroke();
+
+    // A golden face peeking from the hood
+    ctx.fillStyle='#d9c58e';ctx.beginPath();ctx.ellipse(1,13,10.5,12,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#263829';ctx.beginPath();ctx.arc(5,13,1.55,0,Math.PI*2);ctx.fill();
+
+    // Large pointed leaf hood and soft side leaf-ears
+    ctx.fillStyle='#88a85d';ctx.beginPath();ctx.moveTo(-12,10);ctx.quadraticCurveTo(-17,-4,-8,-8);ctx.quadraticCurveTo(-2,-15,5,-9);ctx.quadraticCurveTo(13,-10,16,5);ctx.quadraticCurveTo(7,3,-12,10);ctx.fill();
+    ctx.fillStyle='#73994f';ctx.beginPath();ctx.moveTo(-9,-4);ctx.quadraticCurveTo(-18,-12,-20,-23);ctx.quadraticCurveTo(-10,-20,-5,-8);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(8,-5);ctx.quadraticCurveTo(13,-16,18,-20);ctx.quadraticCurveTo(17,-9,11,1);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#bdd47d';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-12,-2);ctx.quadraticCurveTo(-3,-6,10,-1);ctx.stroke();
+
+    // Small arm, lantern and warm glow
+    ctx.strokeStyle='#d8c58d';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(11,22);ctx.lineTo(19+jumping*3,20);ctx.stroke();
+    ctx.save();ctx.translate(21+jumping*3,17);ctx.shadowColor='#f4dd86';ctx.shadowBlur=12;ctx.fillStyle='#f3db91';ctx.beginPath();ctx.ellipse(0,0,5,6,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#8f925c';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
     ctx.restore();
   }
   function drawBoss(){
